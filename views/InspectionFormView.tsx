@@ -96,13 +96,23 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
         if (sectionIndex === 5) {
              if (!formData.remarks || formData.remarks.trim() === '') newErrors.remarks = true;
              if (!formData.rate || formData.rate === 0) newErrors.rate = true;
+             if (!formData.safeToLoad) newErrors.safeToLoad = true;
              if (!formData.inspectorSignature) newErrors.inspectorSignature = true;
              if (!formData.driverSignature) newErrors.driverSignature = true;
         }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            // Scroll to the first missing field
+            setTimeout(() => {
+                const firstErrorKey = Object.keys(newErrors)[0];
+                const errorElement = document.querySelector(`[data-field-id="${firstErrorKey}"]`);
+                if (errorElement) {
+                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }, 100);
             return false;
         }
 
@@ -134,7 +144,7 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
              <div className="bg-white border-b border-slate-100 sticky top-14 z-30 shadow-sm shrink-0">
                 <div className="max-w-5xl mx-auto px-4 py-4 sm:py-5 overflow-hidden">
                     <div className="flex justify-between items-center gap-1 sm:gap-4">
-                        {SECTIONS.map((section, idx) => {
+                        {SECTIONS.slice(0, 6).map((section, idx) => {
                             const isActive = idx === currentSection;
                             const isCompleted = idx < currentSection;
                             return (
@@ -150,7 +160,7 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
                                             {section.title}
                                         </span>
                                     </div>
-                                    {idx < SECTIONS.length - 1 && (
+                                    {idx < 5 && (
                                         <div className={`h-px flex-1 rounded-full ${isCompleted ? 'bg-emerald-500' : 'bg-slate-100'}`} />
                                     )}
                                 </React.Fragment>
@@ -167,13 +177,13 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
                         <div className="bg-white p-6 sm:p-10 rounded-[2rem] border border-slate-100 shadow-sm">
                             <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight">Inspection Details</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                                <AutocompleteInput label="Truck Registration *" value={formData.truckNo} onChange={v => updateField('truckNo', v)} options={validationLists.trucks} isRegNo={true} error={errors.truckNo} />
-                                <AutocompleteInput label="Trailer ID *" value={formData.trailerNo} onChange={v => updateField('trailerNo', v)} options={validationLists.trailers} isRegNo={true} error={errors.trailerNo} />
-                                <Input label="Job Card (if any)" value={formData.jobCard || ''} onChange={v => updateField('jobCard', v)} error={errors.jobCard} />
-                                <AutocompleteInput label="Inspector" value={formData.inspectedBy} onChange={v => updateField('inspectedBy', v)} options={validationLists.inspectors} readOnly={true} />
-                                <AutocompleteInput label="Driver Name *" value={formData.driverName} onChange={v => updateField('driverName', v)} options={validationLists.drivers} isTitleCase={true} error={errors.driverName} />
-                                <AutocompleteInput label="Location *" value={formData.location} onChange={v => updateField('location', v)} options={validationLists.locations} isTitleCase={true} error={errors.location} />
-                                <Input label="Odometer Reading (KM) *" type="number" value={formData.odometer} onChange={v => updateField('odometer', v)} error={errors.odometer} />
+                                <div data-field-id="truckNo"><AutocompleteInput label="Truck Registration *" value={formData.truckNo} onChange={v => updateField('truckNo', v)} options={validationLists.trucks} isRegNo={true} error={errors.truckNo} /></div>
+                                <div data-field-id="trailerNo"><AutocompleteInput label="Trailer ID *" value={formData.trailerNo} onChange={v => updateField('trailerNo', v)} options={validationLists.trailers} isRegNo={true} error={errors.trailerNo} /></div>
+                                <div data-field-id="jobCard"><Input label="Job Card (if any)" value={formData.jobCard || ''} onChange={v => updateField('jobCard', v)} error={errors.jobCard} /></div>
+                                <div data-field-id="inspectedBy"><AutocompleteInput label="Inspector" value={formData.inspectedBy} onChange={v => updateField('inspectedBy', v)} options={validationLists.inspectors} readOnly={true} /></div>
+                                <div data-field-id="driverName"><AutocompleteInput label="Driver Name *" value={formData.driverName} onChange={v => updateField('driverName', v)} options={validationLists.drivers} isTitleCase={true} error={errors.driverName} /></div>
+                                <div data-field-id="location"><AutocompleteInput label="Location *" value={formData.location} onChange={v => updateField('location', v)} options={validationLists.locations} isTitleCase={true} error={errors.location} /></div>
+                                <div data-field-id="odometer"><Input label="Odometer Reading (KM) *" type="number" value={formData.odometer} onChange={v => updateField('odometer', v)} error={errors.odometer} /></div>
                             </div>
                         </div>
                     </div>
@@ -202,7 +212,7 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
                                 </div>
                                 <div className="divide-y divide-slate-50">
                                     {getItemsForStep(currentSection).filter(i => i.category === cat).map(item => (
-                                        <div key={item.id} className={`p-6 sm:p-8 transition-colors ${errors[item.id] ? 'bg-rose-50/30' : ''}`}>
+                                        <div key={item.id} data-field-id={item.id} className={`p-6 sm:p-8 transition-colors ${errors[item.id] ? 'bg-rose-50/30' : ''}`}>
                                             <p className="font-bold text-xs sm:text-sm text-slate-700 uppercase tracking-tight mb-5 leading-snug">{item.label}</p>
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 max-w-2xl">
                                                 <StatusButton label="Good" status={InspectionStatus.GOOD} current={formData[item.id]} onClick={() => updateField(item.id, InspectionStatus.GOOD)} colorClass="green" />
@@ -223,57 +233,85 @@ const InspectionFormView: React.FC<InspectionFormViewProps> = ({
                         <div className="bg-white p-6 sm:p-10 rounded-[2rem] border border-slate-100 shadow-sm">
                             <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight">Review & Sign</h2>
                             <div className="space-y-8">
-                                <div>
+                                <div data-field-id="remarks">
                                     <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Comments *</label>
-                                    <textarea className="w-full p-6 bg-slate-50 border border-slate-100 rounded-2xl h-40 outline-none font-medium text-sm focus:ring-4 focus:ring-indigo-50/50 resize-none transition-all" value={formData.remarks} onChange={e => updateField('remarks', e.target.value)} />
+                                    <textarea className={`w-full p-6 bg-slate-50 border rounded-2xl h-40 outline-none font-medium text-sm focus:ring-4 focus:ring-indigo-50/50 resize-none transition-all ${errors.remarks ? 'border-rose-300 bg-rose-50/30' : 'border-slate-100'}`} value={formData.remarks} onChange={e => updateField('remarks', e.target.value)} />
                                 </div>
-                                <div>
+                                <div data-field-id="rate">
                                     <label className="block text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Overall Condition Rating *</label>
-                                    <div className="flex gap-2 sm:gap-4">
+                                    <div className={`flex gap-2 sm:gap-4 p-1 rounded-2xl ${errors.rate ? 'bg-rose-50/50 ring-1 ring-rose-200' : ''}`}>
                                         {[1, 2, 3, 4, 5].map(num => (
                                             <button key={num} onClick={() => updateField('rate', num)} className={`flex-1 h-12 sm:h-14 rounded-xl font-black text-lg transition-all ${formData.rate === num ? 'bg-slate-900 text-white shadow-lg scale-105' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}>{num}</button>
                                         ))}
                                     </div>
                                 </div>
+
+                                <div data-field-id="safeToLoad" className={`p-6 rounded-2xl border ${errors.safeToLoad ? 'bg-rose-50/30 border-rose-300' : 'bg-slate-50/30 border-slate-100'}`}>
+                                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-5 tracking-[0.2em]">Safety Certification *</label>
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <p className="flex-1 font-bold text-slate-700 uppercase tracking-tight text-sm">Is this vehicle safe to load/dispatch?</p>
+                                        <div className="flex gap-2 shrink-0">
+                                            <button 
+                                                onClick={() => updateField('safeToLoad', 'Yes')}
+                                                className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${formData.safeToLoad === 'Yes' ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
+                                            >
+                                                Yes
+                                            </button>
+                                            <button 
+                                                onClick={() => updateField('safeToLoad', 'No')}
+                                                className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${formData.safeToLoad === 'No' ? 'bg-rose-600 text-white border-rose-600 shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
+                                            >
+                                                No
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-50">
-                                    <SignaturePad label="Inspector Signature" existingSignature={formData.inspectorSignature} onSave={sig => updateField('inspectorSignature', sig)} />
-                                    <SignaturePad label="Driver Signature" existingSignature={formData.driverSignature} onSave={sig => updateField('driverSignature', sig)} />
+                                    <div data-field-id="inspectorSignature">
+                                        <SignaturePad label="Inspector Signature *" existingSignature={formData.inspectorSignature} onSave={sig => updateField('inspectorSignature', sig)} />
+                                        {errors.inspectorSignature && <p className="text-[9px] text-rose-500 font-bold mt-1 uppercase tracking-widest">Required</p>}
+                                    </div>
+                                    <div data-field-id="driverSignature">
+                                        <SignaturePad label="Driver Signature *" existingSignature={formData.driverSignature} onSave={sig => updateField('driverSignature', sig)} />
+                                        {errors.driverSignature && <p className="text-[9px] text-rose-500 font-bold mt-1 uppercase tracking-widest">Required</p>}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-
-                {currentSection === 6 && (
-                    <div className="animate-fadeIn py-10 text-center">
-                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-emerald-100">
-                            <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <button 
-                            onClick={handleSubmitInspection} 
-                            disabled={submissionStatus !== 'idle'} 
-                            className="w-full sm:w-auto px-12 py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-sm shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 border-t border-white/10 uppercase tracking-[0.2em]"
-                        >
-                            {submissionStatus === 'submitting' ? 'Uploading...' : 'Submit'}
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* ADAPTIVE FOOTER NAV */}
-            <footer className="bg-white/90 backdrop-blur-md border-t border-slate-100 p-4 sm:p-6 fixed bottom-0 left-0 right-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                <div className="max-w-5xl mx-auto flex gap-3 sm:gap-6">
-                    <button onClick={handleBack} className="flex-1 sm:flex-none px-6 sm:px-10 py-3.5 rounded-xl sm:rounded-2xl border border-slate-200 font-black text-slate-400 hover:text-slate-800 transition-all text-[10px] uppercase tracking-widest active:scale-95">
+            <footer className="bg-white/90 backdrop-blur-md border-t border-slate-100 p-3 sm:p-6 fixed bottom-0 left-0 right-0 z-40 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-6">
+                    <button onClick={handleBack} className="flex-1 sm:flex-none px-4 sm:px-10 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-slate-200 font-black text-slate-400 hover:text-slate-800 transition-all text-[9px] sm:text-[10px] uppercase tracking-widest active:scale-95 whitespace-nowrap">
                         {currentSection === 0 ? 'Cancel' : 'Previous'}
                     </button>
-                    <div className="flex gap-3 flex-[2] sm:flex-1 justify-end">
-                        <button onClick={handleSaveDraftLocal} className="flex-1 sm:flex-none px-4 sm:px-8 py-3.5 rounded-xl sm:rounded-2xl bg-indigo-50 text-indigo-600 font-black hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest active:scale-95">
-                            {showDraftSaved ? 'Saved' : 'Save Draft'}
+                    
+                    <div className="flex gap-2 sm:gap-4 items-center shrink-0">
+                        <button onClick={handleSaveDraftLocal} className="px-3 sm:px-8 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-indigo-50 text-indigo-600 font-black hover:bg-indigo-100 transition-all flex items-center justify-center gap-1 sm:gap-2 text-[9px] sm:text-[10px] uppercase tracking-widest active:scale-95 whitespace-nowrap">
+                            {showDraftSaved ? 'Saved' : 'Draft'}
                         </button>
-                        {currentSection < SECTIONS.length - 1 && (
-                            <button onClick={handleNext} className="flex-[1.5] sm:flex-none px-8 sm:px-12 py-3.5 rounded-xl sm:rounded-2xl bg-slate-900 text-white font-black hover:bg-black shadow-lg transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] active:scale-95 border-t border-white/10">
+                        
+                        {currentSection < 5 ? (
+                            <button onClick={handleNext} className="px-5 sm:px-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-900 text-white font-black hover:bg-black shadow-lg transition-all flex items-center justify-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] uppercase tracking-widest sm:tracking-[0.2em] active:scale-95 border-t border-white/10 whitespace-nowrap">
                                 Continue
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={handleSubmitInspection} 
+                                disabled={submissionStatus !== 'idle'} 
+                                className="px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-lg transition-all flex items-center justify-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] uppercase tracking-widest sm:tracking-[0.2em] active:scale-95 border-t border-white/10 disabled:bg-slate-400 whitespace-nowrap"
+                            >
+                                {submissionStatus === 'submitting' ? (
+                                    <svg className="animate-spin h-3.5 sm:h-4 w-3.5 sm:w-4 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                ) : (
+                                    <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
+                                )}
+                                {submissionStatus === 'submitting' ? 'Wait' : 'Submit Inspection'}
                             </button>
                         )}
                     </div>

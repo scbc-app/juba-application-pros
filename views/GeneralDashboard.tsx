@@ -7,6 +7,7 @@ interface GeneralDashboardProps {
     startNewInspection: () => void;
     // Fix: Updated signature to match DashboardTemplate
     fetchHistory: (force?: boolean) => void;
+    searchDatabase?: (term: string) => Promise<InspectionData[]>;
     isLoadingHistory: boolean;
     historyList: InspectionData[];
     onViewReport: (item: InspectionData) => void;

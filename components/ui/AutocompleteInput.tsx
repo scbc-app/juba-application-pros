@@ -21,10 +21,60 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filter options based on input - Safely handle non-string data
-  const filteredOptions = options.filter(opt => 
-    opt != null && String(opt).toLowerCase().includes((value || '').toLowerCase())
-  );
+  // Filter options based on input - Enhanced with fuzzy matching and space-agnostic search
+  const filteredOptions = React.useMemo(() => {
+    if (!value || value.trim() === '') return options.slice(0, 10); // Show first 10 if empty
+
+    const searchTerm = value.toLowerCase().trim();
+    const normalizedSearch = searchTerm.replace(/\s+/g, '');
+    
+    // 1. Precise matches (starts with or contains)
+    const exactMatches = options.filter(opt => {
+        const str = String(opt).toLowerCase();
+        const normalizedStr = str.replace(/\s+/g, '');
+        
+        // Exact match or includes original
+        if (str.startsWith(searchTerm) || str.includes(searchTerm)) return true;
+        
+        // Match ignoring spaces (critical for Reg Nos)
+        if (normalizedStr.startsWith(normalizedSearch) || normalizedStr.includes(normalizedSearch)) return true;
+        
+        return false;
+    });
+
+    // 2. Fuzzy matches (if we don't have enough exact matches)
+    const fuzzyMatches: string[] = [];
+    if (exactMatches.length < 5) {
+        options.forEach(opt => {
+            const str = String(opt).toLowerCase();
+            if (exactMatches.includes(opt)) return;
+
+            // Simple fuzzy: check if characters exist in order
+            let searchIdx = 0;
+            for (let i = 0; i < str.length && searchIdx < searchTerm.length; i++) {
+                if (str[i] === searchTerm[searchIdx]) {
+                    searchIdx++;
+                }
+            }
+            
+            if (searchIdx === searchTerm.length) {
+                fuzzyMatches.push(opt);
+            }
+        });
+    }
+
+    // Combine and limit to 10 total
+    const combined = [...exactMatches, ...fuzzyMatches].slice(0, 10);
+    
+    // Ensure uniqueness
+    return Array.from(new Set(combined));
+  }, [options, value]);
+
+  // Check if current value exists exactly in options (ignoring spaces for robustness)
+  const exactExists = React.useMemo(() => {
+    const normVal = value.toLowerCase().replace(/\s+/g, '');
+    return options.some(opt => String(opt).toLowerCase().replace(/\s+/g, '') === normVal);
+  }, [options, value]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -132,30 +182,51 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
       {error && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1 animate-fadeIn">This field is required</p>}
 
       {!readOnly && isOpen && (value.length > 0 || filteredOptions.length > 0) && (
-        <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+        <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-fadeIn">
           {filteredOptions.length > 0 ? (
-            filteredOptions.map((opt, idx) => (
-              <li
-                key={idx}
-                onClick={() => handleSelect(opt)}
-                className={`px-4 py-2.5 text-sm cursor-pointer transition-colors border-b border-gray-50 last:border-none flex justify-between items-center
-                  ${idx === highlightedIndex ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}
-                `}
-              >
-                {opt}
-                {isRegNo && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">EXISTING</span>}
-              </li>
-            ))
+            <>
+              {filteredOptions.map((opt, idx) => {
+                const isExact = String(opt).toLowerCase().includes((value || '').toLowerCase());
+                return (
+                  <li
+                    key={idx}
+                    onClick={() => handleSelect(opt)}
+                    className={`px-4 py-2.5 text-sm cursor-pointer transition-colors border-b border-gray-50 last:border-none flex justify-between items-center
+                      ${idx === highlightedIndex ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}
+                    `}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{opt}</span>
+                      {!isExact && <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">Related</span>}
+                    </div>
+                    {isRegNo && <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 font-black uppercase tracking-tighter">Verified ID</span>}
+                  </li>
+                );
+              })}
+              
+              {!exactExists && value.trim().length > 0 && (
+                <li 
+                  onClick={() => handleSelect(value)}
+                  className="px-4 py-3 text-xs text-indigo-600 bg-indigo-50/50 cursor-pointer font-bold border-t border-indigo-100 flex items-center justify-between hover:bg-indigo-100 transition-all group"
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>USE NEW: "{value}"</span>
+                  </div>
+                  <span className="text-[8px] bg-indigo-600 text-white px-2 py-1 rounded-full px-2">NEW</span>
+                </li>
+              )}
+            </>
           ) : (
              <li 
-                onMouseDown={(e) => {
-                    e.preventDefault(); 
-                    handleSelect(value);
-                }}
-                className="px-4 py-3 text-sm text-blue-600 bg-blue-50 cursor-pointer font-medium flex items-center gap-2 hover:bg-blue-100 transition-colors"
+                onClick={() => handleSelect(value)}
+                className="px-4 py-4 text-xs text-indigo-600 bg-indigo-50/80 cursor-pointer font-black flex flex-col items-center gap-2 hover:bg-indigo-100 transition-all text-center"
              >
-                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                 Add New Entry: "{value}"
+                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mb-1">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                 </div>
+                 <p className="tracking-widest uppercase">No matches found</p>
+                 <span className="text-slate-400 font-normal normal-case">Click to register "{value}" as a new entry</span>
              </li>
           )}
         </ul>

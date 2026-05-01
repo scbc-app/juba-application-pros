@@ -1,71 +1,29 @@
-import { GoogleGenAI } from "@google/genai";
 import { InspectionData, InspectionStatus } from "../types";
-import { INSPECTION_ITEMS } from "../constants";
+import { INSPECTION_ITEMS, PETROLEUM_INSPECTION_ITEMS, PETROLEUM_V2_ITEMS, ACID_INSPECTION_ITEMS } from "../constants";
 
 export const analyzeInspection = async (data: InspectionData): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  try {
-    const failedItems = INSPECTION_ITEMS.filter(item => 
-      data[item.id] === InspectionStatus.BAD
-    );
-    const attentionItems = INSPECTION_ITEMS.filter(item => 
-      data[item.id] === InspectionStatus.ATTENTION
-    );
-    
-    let prompt = `You are a Senior Fleet Safety Manager. Review the following truck inspection report.\n`;
-    prompt += `Truck No: ${data.truckNo}, Trailer: ${data.trailerNo}, Odometer: ${data.odometer}\n`;
-    
-    prompt += `\nBAD / FAILED ITEMS (${failedItems.length}):\n`;
-    if (failedItems.length === 0) {
-      prompt += "None.\n";
-    } else {
-      failedItems.forEach(item => {
-        prompt += `- ${item.label} (Status: Critical Failure)\n`;
-      });
-    }
+  // Determine which items set to use based on data content to identify specific faults
+  let allItems = INSPECTION_ITEMS;
+  if (data.petro_1) allItems = PETROLEUM_INSPECTION_ITEMS;
+  else if (data.petro2_1) allItems = PETROLEUM_V2_ITEMS;
+  else if (data.acid_1) allItems = ACID_INSPECTION_ITEMS;
 
-    prompt += `\nITEMS NEEDING ATTENTION (${attentionItems.length}):\n`;
-    if (attentionItems.length === 0) {
-      prompt += "None.\n";
-    } else {
-      attentionItems.forEach(item => {
-        prompt += `- ${item.label} (Status: Needs Attention)\n`;
-      });
-    }
+  const failedItems = allItems.filter(item => data[item.id] === InspectionStatus.BAD);
+  const attentionItems = allItems.filter(item => data[item.id] === InspectionStatus.ATTENTION);
 
-    prompt += `\nREMARKS from Inspector: ${data.remarks || "No remarks provided."}\n`;
-    prompt += `\nOverall Rating given by inspector: ${data.rate}/5\n`;
-    
-    prompt += `\nTask:\n`;
-    prompt += `1. Summarize the condition of the vehicle in 2 sentences.\n`;
-    prompt += `2. Provide a "Safety Risk Score" from 1 (Safe) to 10 (Critical).\n`;
-    prompt += `3. List 3 immediate prioritized actions for the maintenance team.\n`;
-    prompt += `\nFormat the output as professional, concise text.`;
-
-    const parts: any[] = [{ text: prompt }];
-
-    if (data.photoDamage) {
-      const base64Data = data.photoDamage.split(',')[1];
-      if (base64Data) {
-        parts.push({
-          inlineData: {
-            mimeType: 'image/jpeg',
-            data: base64Data
-          }
-        });
-        parts.push({ text: "Also analyze the attached photo of the reported damage for severity." });
-      }
-    }
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: { parts },
-    });
-
-    return response.text || "Analysis complete but no text returned.";
-
-  } catch (error) {
-    console.error("Gemini Analysis Failed:", error);
-    return "AI Safety Analysis currently unavailable. Please review the manual report.";
+  if (failedItems.length > 0) {
+    const list = failedItems.map(i => i.label.split('. ').pop()).join(', ');
+    return `CRITICAL: Ground vehicle immediately. Resolve critical faults in: ${list}. Safety risk level is HIGH.`;
   }
+
+  if (attentionItems.length > 0) {
+    const list = attentionItems.map(i => i.label.split('. ').pop()).join(', ');
+    return `CAUTION: Maintenance required. Schedule repairs for: ${list} within the next 24 hours.`;
+  }
+
+  if (data.safeToLoad === 'No') {
+    return `RESTRICTED: Vehicle marked UNSAFE TO LOAD by inspector. Do not dispatch until further review.`;
+  }
+
+  return `OPERATIONAL: Vehicle meets safety standards. Clear for deployment.`;
 };

@@ -32,6 +32,7 @@ export interface InspectionData {
   timestamp: string;
   rate?: number | string;
   remarks?: string;
+  safeToLoad?: string; // "Yes" or "No"
   inspectorSignature?: string; 
   driverSignature?: string; 
   photoFront?: string; 
@@ -54,6 +55,7 @@ export const INITIAL_DATA: InspectionData = {
   timestamp: '',
   rate: 0,
   remarks: '',
+  safeToLoad: '',
   inspectorSignature: '',
   driverSignature: '',
   photoFront: '',
@@ -83,8 +85,19 @@ export interface User {
     preferences?: UserPreferences;
     password?: string;
     isActive?: boolean;
-    // Fix: Added needsSetup to User interface to track onboarding status
     needsSetup?: boolean;
+    /* Presence and typing status derived from Messages sheet */
+    lastSeen?: string;
+    isTyping?: boolean;
+}
+
+export interface TemplateConfig {
+  title: string;
+  docNo: string;
+  revisionNo: string;
+  revisionDate: string;
+  initialIssueDate: string;
+  nextRevisionDate?: string;
 }
 
 export interface SystemSettings {
@@ -95,6 +108,8 @@ export interface SystemSettings {
     webAppUrl?: string;
     maintenanceMode?: boolean;
     maintenanceMessage?: string;
+    flutterwaveSecretKey?: string; // For Zambian Mobile Money
+    templates?: Record<string, TemplateConfig>;
 }
 
 export interface SubscriptionDetails {
@@ -146,4 +161,22 @@ export interface SupportTicket {
     comments: TicketComment[];
     assignedTo?: string;
     attachment?: string;
+}
+
+export interface MobileMoneyCharge {
+    phoneNumber: string;
+    network: 'AIRTEL' | 'MTN';
+    amount: number;
+    email: string;
+    description: string;
+}
+
+export interface ChatMessage {
+    id: string;
+    senderId: string;
+    senderName: string;
+    receiverId: string;
+    message: string;
+    timestamp: string;
+    status: string;
 }

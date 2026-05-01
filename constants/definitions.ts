@@ -1,6 +1,14 @@
 
 import { InspectionItemConfig } from '../types';
 
+/**
+ * INSTRUCTIONS FOR ADDING NEW INSPECTION ITEMS:
+ * 1. Add your new item object to the relevant array below (e.g. INSPECTION_ITEMS).
+ * 2. Ensure the 'id' is unique and contains NO spaces (e.g. 'brakeFluidLevel').
+ * 3. IMPORTANT: You MUST add a matching column header in your Google Sheet 
+ *    (the exact same 'id') for the data to be saved.
+ */
+
 export const SECTIONS = [
   { id: 'details', title: 'Details', label: 'Details' },
   { id: 'photos', title: 'Photos', label: 'Photos' },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { InspectionData } from '../types';
 
 interface OverviewDashboardProps {
@@ -17,18 +17,38 @@ const RefinedIcon = ({ children }: { children?: React.ReactNode }) => (
     <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-slate-700 transition-all duration-300 group-hover:scale-110">
         {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<any>, { 
             className: "w-full h-full", 
-            strokeWidth: "2", 
+            strokeWidth: "1.5", 
             strokeLinecap: "round",
             strokeLinejoin: "round"
         }) : children}
     </div>
 );
 
-const InspectionChecklistIcon = () => (
+const GeneralAuditIcon = () => (
     <RefinedIcon>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M9 11l3 3L22 4" />
-            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+    </RefinedIcon>
+);
+
+const PetroleumAuditIcon = () => (
+    <RefinedIcon>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 2l-4 7c0 1.5 1.5 3 4 3s4-1.5 4-3l-4-7z" />
+            <path d="M5 20h14M5 17h14M9 14h6" />
+            <rect x="3" y="12" width="18" height="10" rx="2" />
+        </svg>
+    </RefinedIcon>
+);
+
+const AcidAuditIcon = () => (
+    <RefinedIcon>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M10 2l-7 15h18l-7-15h-4z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+            <path d="M7 22h10" />
         </svg>
     </RefinedIcon>
 );
@@ -91,7 +111,7 @@ const SupportIcon = () => (
     <RefinedIcon>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-            <path d="M12 17v-4M12 9h.01" strokeWidth="3" />
+            <path d="M12 17v-4M12 9h.01" strokeWidth="2" />
         </svg>
     </RefinedIcon>
 );
@@ -129,15 +149,15 @@ const LauncherTile = ({
                     </div>
                 )}
                 {badgeCount > 0 && !effectiveLock && (
-                    <div className={`absolute -top-1 -right-1 ${badgeColor} text-white text-[9px] font-black w-6 h-6 rounded-full flex items-center justify-center border-4 border-white shadow-lg`}>
+                    <div className={`absolute -top-1 -right-1 ${badgeColor} text-white text-[9px] font-semibold w-6 h-6 rounded-full flex items-center justify-center border-4 border-white shadow-lg`}>
                         {badgeCount}
                     </div>
                 )}
                 {isAddon && !effectiveLock && (
-                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded shadow-sm border border-indigo-500 uppercase tracking-tighter">Pro</div>
+                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[7px] font-medium px-1.5 py-0.5 rounded shadow-sm border border-indigo-500 uppercase tracking-tighter">Pro</div>
                 )}
             </div>
-            <span className={`text-[10px] font-black text-center leading-tight uppercase tracking-[0.2em] ${effectiveLock ? 'text-slate-400' : 'text-slate-600 group-hover:text-slate-900'}`}>
+            <span className={`text-[10px] font-semibold text-center leading-tight uppercase tracking-[0.2em] ${effectiveLock ? 'text-slate-400' : 'text-slate-600 group-hover:text-slate-900'}`}>
                 {label}
             </span>
         </button>
@@ -146,7 +166,7 @@ const LauncherTile = ({
 
 const SectionHeader = ({ label }: { label: string }) => (
     <div className="w-full flex items-center gap-6 mb-8 opacity-40">
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">{label}</span>
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">{label}</span>
         <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
     </div>
 );
@@ -158,37 +178,34 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate, userR
     return (
         <div className="max-w-5xl mx-auto py-10 sm:py-16 px-4 min-h-screen">
             <div className="space-y-16">
-                {/* 1. System Management */}
                 <section id="system-mgmt-section" className="animate-fadeIn">
                     <SectionHeader label="CONTROL CENTER" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                         <LauncherTile id="maintenance" label="SECURITY" isLocked={isLocked} isForcedLock={!isSuperAdmin} onNavigate={onNavigate} icon={<SecurityIcon />} />
-                        <LauncherTile id="users" label="PERSONNEL" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<StaffIcon />} />
-                        <LauncherTile id="registry" label="REGISTRY" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<RegistryIcon />} />
+                        <LauncherTile id="users" label="USER MANAGEMENT" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<StaffIcon />} />
+                        <LauncherTile id="registry" label="EQUIPMENT REGISTRY" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<RegistryIcon />} />
                         <LauncherTile id="settings" label="SETTINGS" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<SettingsIcon />} />
                     </div>
                 </section>
 
-                {/* 2. Inspection Hub */}
                 <section id="inspection-forms-section" className="animate-fadeIn" style={{ animationDelay: '100ms' }}>
                     <SectionHeader label="AUDIT MODULES" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                        <LauncherTile id="general" label="GENERAL" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<InspectionChecklistIcon />} />
-                        <LauncherTile id="petroleum" label="PETRO V1" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<InspectionChecklistIcon />} />
-                        <LauncherTile id="petroleum_v2" label="PETRO V2" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<InspectionChecklistIcon />} />
-                        <LauncherTile id="acid" label="ACID CHECK" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<InspectionChecklistIcon />} />
+                        <LauncherTile id="general" label="General Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<GeneralAuditIcon />} />
+                        <LauncherTile id="petroleum" label="Petro V1 Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<PetroleumAuditIcon />} />
+                        <LauncherTile id="petroleum_v2" label="Petro V2 Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<PetroleumAuditIcon />} />
+                        <LauncherTile id="acid" label="Acid Tanker Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<AcidAuditIcon />} />
                     </div>
                 </section>
 
-                {/* 3. Operations */}
                 <section className="animate-fadeIn" style={{ animationDelay: '200ms' }}>
                     <SectionHeader label="OPERATIONS" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                         <LauncherTile id="analytics" label="ANALYTICS" isLocked={isLocked} onNavigate={onNavigate} icon={<AnalyticsIcon />} badgeCount={pendingAlertsCount} badgeColor="bg-rose-600" />
-                        <LauncherTile id="track_requests" label="PIPELINE" isLocked={isLocked} onNavigate={onNavigate} icon={<RequestsIcon />} />
+                        <LauncherTile id="track_requests" label="REQUEST INSPECTION" isLocked={isLocked} onNavigate={onNavigate} icon={<RequestsIcon />} />
                         <LauncherTile id="support" label="SUPPORT" isLocked={isLocked} onNavigate={onNavigate} icon={<SupportIcon />} />
                         <div className="hidden sm:flex flex-col items-center justify-center p-8 opacity-20 select-none">
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">HUB ACTIVE</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-300">HUB ACTIVE</span>
                             <div className="w-4 h-1 bg-indigo-500 mt-2 rounded-full animate-pulse"></div>
                         </div>
                     </div>

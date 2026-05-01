@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { User, SystemSettings, SubscriptionDetails } from '../types';
+import PaymentModal from '../components/ui/PaymentModal';
 
 interface MaintenanceViewProps {
     user: User;
@@ -20,7 +22,7 @@ const SectionHeader = ({ label }: { label: string }) => (
 );
 
 const MaintenanceView: React.FC<MaintenanceViewProps> = ({ 
-    appScriptUrl, settings, onSettingsUpdate, showToast, subscription, onRefreshSubscription, history = []
+    user, appScriptUrl, settings, onSettingsUpdate, showToast, subscription, onRefreshSubscription, history = []
 }) => {
     const [msgType, setMsgType] = useState<'info' | 'warning' | 'critical'>('info');
     const [msgBody, setMsgBody] = useState('');
@@ -28,12 +30,14 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
     
     const [maintMode, setMaintMode] = useState(settings.maintenanceMode || false);
     const [maintMessage, setMaintMessage] = useState(settings.maintenanceMessage || 'System under scheduled maintenance.');
+    const [flwKey, setFlwKey] = useState(settings.flutterwaveSecretKey || '');
     const [isSavingMaint, setIsSavingMaint] = useState(false);
 
     const [editPlan, setEditPlan] = useState(subscription?.plan || 'Enterprise');
     const [editExpiry, setEditExpiry] = useState(subscription?.expiryDate || '');
     const [isSavingSub, setIsSavingSub] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     const handleBroadcast = async () => {
         if (!msgBody.trim()) { showToast("Enter alert message.", "error"); return; }
@@ -54,12 +58,13 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                     action: 'update_settings',
                     ...settings,
                     maintenanceMode: maintMode,
-                    maintenanceMessage: maintMessage
+                    maintenanceMessage: maintMessage,
+                    flutterwaveSecretKey: flwKey
                 }),
                 mode: 'no-cors'
             });
-            onSettingsUpdate({ maintenanceMode: maintMode, maintenanceMessage: maintMessage });
-            showToast(maintMode ? "System Lock Active" : "Access Restored", "success");
+            onSettingsUpdate({ maintenanceMode: maintMode, maintenanceMessage: maintMessage, flutterwaveSecretKey: flwKey });
+            showToast("System state synchronized.", "success");
         } catch (e) { showToast("Sync failed.", "error"); } finally { setIsSavingMaint(false); }
     };
 
@@ -69,7 +74,7 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
             await fetch(appScriptUrl, {
                 method: 'POST',
                 body: JSON.stringify({
-                    action: 'update_subscription',
+                    action: 'extend_subscription',
                     plan: editPlan,
                     expiryDate: editExpiry,
                     status: 'Active'
@@ -86,9 +91,18 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
 
     return (
         <div className="max-w-6xl mx-auto py-2 sm:py-6 flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-2 sm:px-4 animate-fadeIn font-sans overflow-hidden">
+            
+            <PaymentModal 
+                isOpen={isPaymentModalOpen} 
+                onClose={() => setIsPaymentModalOpen(false)} 
+                onSuccess={() => onRefreshSubscription && onRefreshSubscription()} 
+                appScriptUrl={appScriptUrl}
+                currentUser={user}
+                showToast={showToast}
+            />
+
             <div className="w-full max-w-5xl space-y-6 sm:space-y-10">
                 
-                {/* Header matches Staff Directory style exactly */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
                     <div>
                         <h2 className="text-2xl sm:text-3xl font-normal text-slate-800 uppercase tracking-tight leading-none">
@@ -96,19 +110,23 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         </h2>
                         <p className="text-[9px] text-slate-400 font-normal uppercase tracking-[0.25em] mt-2">Security Console & Management Hub</p>
                     </div>
-                    <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[9px] font-normal text-slate-500 uppercase tracking-widest">Admin Mode</span>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <button 
+                            onClick={() => setIsPaymentModalOpen(true)}
+                            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-lg transition-all text-[10px] uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.407 2.67 1M12 17V7m0 10c-1.11 0-2.08-.407-2.67-1M12 17V7m0 10a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+                            Instant Renew
+                        </button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {/* Global Alerts Section */}
                     <div className="flex flex-col">
                         <SectionHeader label="Global Alerts" />
                         <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-slate-100 p-5 sm:p-8 flex flex-col h-fit">
                             <textarea 
-                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl h-24 sm:h-28 outline-none focus:ring-2 focus:ring-indigo-500/10 font-normal text-xs text-slate-600 transition-all resize-none mb-4" 
+                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl h-24 sm:h-28 outline-none focus:ring-2 focus:ring-indigo-50 font-normal text-xs text-slate-600 transition-all resize-none mb-4" 
                                 placeholder="System-wide notification text..." 
                                 value={msgBody} 
                                 onChange={e => setMsgBody(e.target.value)}
@@ -125,11 +143,10 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         </div>
                     </div>
 
-                    {/* Access Management Section */}
                     <div className="flex flex-col">
                         <SectionHeader label="System Access" />
-                        <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-slate-100 p-5 sm:p-8 flex flex-col h-fit">
-                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4 border border-slate-50">
+                        <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-slate-100 p-5 sm:p-8 flex flex-col h-fit space-y-4">
+                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-50">
                                 <div>
                                     <span className="text-xs font-normal text-slate-800 uppercase tracking-tight">Maintenance Mode</span>
                                     <p className="text-[8px] text-slate-400 font-normal uppercase tracking-widest mt-0.5">Restrict system state</p>
@@ -138,15 +155,19 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                                     <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-300 ${maintMode ? 'translate-x-6' : 'translate-x-0.5'}`} />
                                 </button>
                             </div>
-                            <input type="text" value={maintMessage} onChange={(e) => setMaintMessage(e.target.value)} placeholder="Display message..." className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-normal text-slate-700 outline-none text-xs mb-4" />
+                            
+                            <div>
+                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Payment Gateway Secret Key</label>
+                                <input type="password" value={flwKey} onChange={(e) => setFlwKey(e.target.value)} placeholder="FLWSECK-..." className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-slate-700 outline-none text-[10px]" />
+                            </div>
+
                             <button onClick={handleSaveMaintenance} disabled={isSavingMaint} className="w-full py-3 bg-slate-900 hover:bg-black text-white font-normal rounded-xl shadow-lg transition-all text-[10px] uppercase tracking-[0.2em] active:scale-95">
-                                Update Status
+                                Save Global Settings
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Subscription Management Section */}
                 <div className="flex flex-col">
                     <SectionHeader label="License Status" />
                     <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -169,52 +190,17 @@ const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Renewal Expiry</label>
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Manual Renewal Expiry</label>
                                     <input type="date" value={editExpiry} onChange={(e) => setEditExpiry(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-normal text-slate-700 outline-none" />
                                 </div>
                                 <div className="flex items-end">
                                     <button onClick={handleUpdateSubscription} disabled={isSavingSub} className="w-full py-3 bg-slate-900 hover:bg-black text-white font-normal rounded-xl shadow-lg transition-all text-[10px] uppercase tracking-[0.2em] active:scale-95 disabled:opacity-50 h-[46px]">
-                                        Sync License
+                                        Manual Update
                                     </button>
                                 </div>
                             </div>
-
-                            <div className="border-t border-slate-50 pt-4">
-                                <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-[9px] font-normal text-slate-400 uppercase tracking-[0.2em] hover:text-indigo-600 transition-colors">
-                                    <svg className={`w-3 h-3 transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
-                                    Registry Audit Trail
-                                </button>
-                                {showHistory && (
-                                    <div className="mt-4 bg-slate-50/50 rounded-xl overflow-hidden border border-slate-100 max-h-32 overflow-y-auto scrollbar-hide animate-fadeIn">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-slate-50 text-[8px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                                <tr>
-                                                    <th className="px-4 py-2">Sync Date</th>
-                                                    <th className="px-4 py-2">Tier</th>
-                                                    <th className="px-4 py-2 text-right">Validity</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-50">
-                                                {history.length === 0 ? (
-                                                    <tr><td colSpan={3} className="px-4 py-4 text-[9px] text-slate-400 text-center italic">No prior renewal records detected.</td></tr>
-                                                ) : history.map((item, idx) => (
-                                                    <tr key={idx} className="text-[9px] text-slate-600">
-                                                        <td className="px-4 py-2 font-mono uppercase opacity-60">{item.timestamp?.split('T')[0] || 'N/A'}</td>
-                                                        <td className="px-4 py-2 font-normal uppercase tracking-tight">{item.plan || 'Standard'}</td>
-                                                        <td className="px-4 py-2 text-right font-medium text-slate-400">{item.expiryDate || 'N/A'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div className="text-center py-2 shrink-0">
-                    <p className="text-[9px] font-normal text-slate-300 uppercase tracking-[0.4em]">Proprietary Modular Framework v2.0</p>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, SystemSettings } from '../types';
 
@@ -74,7 +75,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
               setPassword('');
           } else {
               let safeRole: User['role'] = 'Inspector';
-              // Fix: Correctly reference rawUser.role instead of the variable being declared (rawRole)
               const rawRole = rawUser.role ? String(rawUser.role).trim().toLowerCase() : '';
               
               if (rawRole === 'superadmin') safeRole = 'SuperAdmin';
@@ -172,7 +172,13 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
 
             <div className="space-y-4">
               <input type="email" required className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-100 outline-none font-medium text-sm" value={username} onChange={e => setUsername(e.target.value)} placeholder="Email Address" />
-              <input type="password" required className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-100 outline-none font-medium text-sm" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
+              <input 
+                type="password" 
+                className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-100 outline-none font-medium text-sm" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                placeholder="Password" 
+              />
             </div>
 
             <div className="flex items-center justify-between px-1 pt-1">
@@ -187,6 +193,12 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                 {isLoading ? 'Processing...' : isRegistering ? 'Register Admin' : 'Sign In'}
               </button>
             </div>
+            
+            {!isRegistering && (
+                <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">
+                    First time login? Enter email and leave password blank.
+                </p>
+            )}
           </form>
         </div>
       </div>

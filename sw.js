@@ -1,4 +1,3 @@
-
 const CACHE_NAME = 'safetycheck-pro-v1';
 const urlsToCache = [
   './',
@@ -7,7 +6,6 @@ const urlsToCache = [
   './manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
   'https://aistudiocdn.com/react-dom@^19.2.1/client',
   'https://aistudiocdn.com/react-dom@^19.2.1',
   'https://aistudiocdn.com/react@^19.2.1/',

@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface SubmissionOverlayProps {
@@ -41,7 +42,7 @@ const SubmissionOverlay: React.FC<SubmissionOverlayProps> = ({ status, onClose, 
                         
                         <div>
                             <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Submission Successful</h3>
-                            <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-widest">Fleet repository updated</p>
+                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-[0.2em]">Dispatching Digital Reports...</p>
                         </div>
 
                         {/* AI ANALYSIS SECTION */}
@@ -62,6 +63,9 @@ const SubmissionOverlay: React.FC<SubmissionOverlayProps> = ({ status, onClose, 
                                 <div className="animate-fadeIn">
                                     <p className="text-xs font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
                                         {aiAnalysis}
+                                    </p>
+                                    <p className="mt-4 text-[9px] text-slate-400 font-bold uppercase tracking-widest border-t border-slate-100 pt-3">
+                                        Report logged to central cloud registry
                                     </p>
                                 </div>
                             )}

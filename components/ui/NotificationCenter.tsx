@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+// Add React to imports to fix 'Cannot find namespace React' error
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { AppNotification } from '../../types';
 
 interface NotificationCenterProps {

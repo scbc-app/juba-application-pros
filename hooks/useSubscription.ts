@@ -7,12 +7,15 @@ export const useSubscription = (appScriptUrl: string, currentUser: User | null) 
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchSubscription = async () => {
-        if (!appScriptUrl || typeof appScriptUrl !== 'string' || !appScriptUrl.startsWith('http')) return;
+        if (!appScriptUrl || typeof appScriptUrl !== 'string' || !appScriptUrl.startsWith('https://script.google.com')) return;
         if (!currentUser) return;
         
         setIsLoading(true);
         try {
-            const response = await fetch(`${appScriptUrl}?t=${new Date().getTime()}`);
+            const cacheBuster = `t=${new Date().getTime()}`;
+            const finalUrl = `${appScriptUrl}${appScriptUrl.includes('?') ? '&' : '?'}${cacheBuster}`;
+            
+            const response = await fetch(finalUrl);
             if (!response.ok) return;
 
             const json = await response.json();

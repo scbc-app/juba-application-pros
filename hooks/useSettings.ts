@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { SystemSettings } from '../types';
-import { PRE_CONFIGURED_SCRIPT_URL } from '../constants';
+import { PRE_CONFIGURED_SCRIPT_URL, TEMPLATE_CONFIGS } from '../constants';
 
 export const useSettings = () => {
     const [appScriptUrl, setAppScriptUrl] = useState<string>(() => {
@@ -19,7 +19,11 @@ export const useSettings = () => {
                 try { return JSON.parse(saved); } catch (e) { console.error("Failed to parse local settings", e); }
             }
         }
-        return { companyName: 'SafetyCheck Pro', managerEmail: '' };
+        return { 
+            companyName: 'SafetyCheck Pro', 
+            managerEmail: '',
+            templates: TEMPLATE_CONFIGS
+        };
     });
 
     const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -62,18 +66,20 @@ export const useSettings = () => {
             
             if (settingsRows && Array.isArray(settingsRows) && settingsRows.length > 1) {
                 const latestConfig = settingsRows[1]; 
-                if (latestConfig && latestConfig.length >= 8) {
-                    const rawMaintenanceVal = String(latestConfig[7]).toUpperCase().trim();
+                // Checks for index 8 because index 9 is maintenance message, but index 1-7 are vital.
+                if (latestConfig && latestConfig.length >= 9) {
+                    const rawMaintenanceVal = String(latestConfig[8]).toUpperCase().trim();
                     const isMaintActive = rawMaintenanceVal === 'TRUE';
                     
                     const remoteSettings: SystemSettings = {
-                        companyName: latestConfig[0] || 'SafetyCheck Pro',
-                        managerEmail: latestConfig[1] || '',
-                        companyLogo: (latestConfig[4] && String(latestConfig[4]).length > 100) ? latestConfig[4] : undefined,
-                        mobileApkLink: latestConfig[5] || '', 
-                        webAppUrl: latestConfig[6] || '',
+                        companyName: latestConfig[1] || 'SafetyCheck Pro',
+                        managerEmail: latestConfig[2] || '',
+                        companyLogo: (latestConfig[5] && String(latestConfig[5]).length > 100) ? latestConfig[5] : undefined,
+                        mobileApkLink: latestConfig[6] || '', 
+                        webAppUrl: latestConfig[7] || '',
                         maintenanceMode: isMaintActive,
-                        maintenanceMessage: latestConfig[8] || 'System under scheduled maintenance.'
+                        maintenanceMessage: latestConfig[9] || 'System under scheduled maintenance.',
+                        templates: latestConfig[10] ? JSON.parse(latestConfig[10]) : settings.templates || TEMPLATE_CONFIGS
                     };
                     
                     setSettings(prev => {

@@ -63,10 +63,13 @@ export const useNotifications = (appScriptUrl: string, currentUser: User | null,
     };
 
     const fetchNotifications = async () => {
-        if (!appScriptUrl || !navigator.onLine || !currentUser) return;
+        if (!appScriptUrl || !appScriptUrl.startsWith('https://script.google.com') || !navigator.onLine || !currentUser) return;
 
         try {
-            const response = await fetch(`${appScriptUrl}?t=${Date.now()}`);
+            const cacheBuster = `t=${Date.now()}`;
+            const finalUrl = `${appScriptUrl}${appScriptUrl.includes('?') ? '&' : '?'}${cacheBuster}`;
+            
+            const response = await fetch(finalUrl);
             if (!response.ok) return;
 
             const text = await response.text();

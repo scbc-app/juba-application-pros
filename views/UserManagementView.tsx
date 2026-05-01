@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, ValidationLists, SystemSettings } from '../types';
 import AutocompleteInput from '../components/ui/AutocompleteInput';
@@ -125,7 +126,7 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
             const response = await fetch(appScriptUrl, { method: 'POST', body: JSON.stringify(payload) });
             const result = await response.json();
             if (result.status === 'success') {
-                showToast(isEditing ? "Updated" : "Enrolled", 'success');
+                showToast(isEditing ? "Updated" : "Enrolled & Invitation Sent", 'success');
                 setViewMode('list');
                 fetchUsers();
             } else { showToast(result.message || "Failed", 'error'); }
@@ -142,6 +143,14 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                     </button>
                     <div className="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-6 md:p-10">
                         <SectionHeader label={isEditing ? "Modify Profile" : "Staff Enrollment"} />
+                        {!isEditing && (
+                            <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                <p className="text-[10px] text-indigo-700 font-bold uppercase tracking-tight leading-relaxed">
+                                    <span className="mr-2">📧</span>
+                                    An automated invitation will be sent to the email provided below. The user can complete their setup upon their first sign-in.
+                                </p>
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
@@ -162,6 +171,18 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                                 </div>
                                 <div className="space-y-4">
                                     <AutocompleteInput label="Designation" value={formData.position} onChange={v => setFormData({...formData, position: v})} options={validationLists.positions} isTitleCase={true} />
+                                    <div>
+                                        <label className="block text-[9px] font-semibold uppercase text-slate-400 mb-1.5 tracking-widest">
+                                            Password {isEditing ? '(Set to Update)' : '(Optional)'}
+                                        </label>
+                                        <input 
+                                            type="password" 
+                                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 text-sm" 
+                                            value={formData.password} 
+                                            onChange={e => setFormData({...formData, password: e.target.value})} 
+                                            placeholder={isEditing ? "Leave blank to keep current" : "One-time entry if blank"} 
+                                        />
+                                    </div>
                                     {isEditing && (
                                         <AutocompleteInput label="Display Name" value={formData.name} onChange={v => setFormData({...formData, name: v})} options={validationLists.inspectors} isTitleCase={true} />
                                     )}
@@ -169,7 +190,7 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                             </div>
                             <div className="pt-2 flex justify-end">
                                 <button type="submit" disabled={isSubmitting} className="w-full md:w-auto px-10 py-3 bg-slate-900 hover:bg-black text-white font-medium rounded-xl transition-all text-[10px] uppercase tracking-widest active:scale-95">
-                                    {isSubmitting ? 'Wait...' : isEditing ? 'Sync' : 'Enroll'}
+                                    {isSubmitting ? 'Wait...' : isEditing ? 'Sync' : 'Enroll Personnel'}
                                 </button>
                             </div>
                         </form>
@@ -189,7 +210,7 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                     </div>
                     <button onClick={() => { setFormData({ name: '', username: '', password: '', role: 'Inspector', position: '' }); setIsEditing(false); setViewMode('form'); }} className="w-full sm:w-auto px-8 py-3 bg-slate-900 hover:bg-black text-white font-medium rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest active:scale-95">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4v16m8-8H4"></path></svg>
-                        Add Personnel
+                        Enroll Personnel
                     </button>
                 </div>
 
@@ -217,7 +238,7 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center font-semibold text-slate-300 text-[10px] shrink-0">{u.name ? u.name.substring(0, 2).toUpperCase() : '??'}</div>
                                                     <div className="min-w-0">
-                                                        <div className="font-medium text-slate-800 text-xs tracking-tight truncate uppercase">{u.name || 'Setup Pending'}</div>
+                                                        <div className="font-medium text-slate-800 text-xs tracking-tight truncate uppercase">{u.name || 'Invite Pending'}</div>
                                                         <div className="text-[10px] text-slate-400 font-normal truncate">{u.role === 'SuperAdmin' && !isSuperAdmin ? '••••••' : u.username}</div>
                                                     </div>
                                                 </div>
@@ -255,7 +276,7 @@ const UserManagementView: React.FC<UserManagementViewProps> = ({ currentUser, ap
                                             <div className="flex items-center gap-2.5 min-w-0">
                                                 <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center font-semibold text-slate-300 text-[10px] shrink-0">{u.name ? u.name.substring(0, 2).toUpperCase() : '??'}</div>
                                                 <div className="min-w-0">
-                                                    <div className="font-medium text-slate-800 text-xs tracking-tight truncate uppercase leading-none">{u.name || 'Setup Pending'}</div>
+                                                    <div className="font-medium text-slate-800 text-xs tracking-tight truncate uppercase leading-none">{u.name || 'Invite Pending'}</div>
                                                     <div className="text-[9px] text-slate-400 font-normal truncate mt-1">{u.role === 'SuperAdmin' && !isSuperAdmin ? '••••••' : u.username}</div>
                                                 </div>
                                             </div>

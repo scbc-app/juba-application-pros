@@ -1,9 +1,8 @@
-
 import { INSPECTION_ITEMS, PETROLEUM_INSPECTION_ITEMS, PETROLEUM_V2_ITEMS, ACID_INSPECTION_ITEMS } from './definitions';
 
 const BASE_HEADERS = [
   'id', 'timestamp', 'truckNo', 'trailerNo', 'inspectedBy', 'driverName', 
-  'location', 'odometer', 'rate', 'remarks', 'inspectorSignature', 
+  'location', 'odometer', 'rate', 'remarks', 'safeToLoad', 'inspectorSignature', 
   'driverSignature', 'photoFront', 'photoLS', 'photoRS', 'photoBack', 
   'photoDamage', 'jobCard'
 ];
