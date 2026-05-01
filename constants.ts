@@ -1,6 +1,6 @@
 
 // Paste your Google Apps Script URL here to auto-connect the app
-export const PRE_CONFIGURED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNyYFS2lkIwrZ2Z5oPu5opL7G1BieXINqMBEoue0kMcfpe3pNzfNJgqFt_iguZl80ueg/exec'; 
+export const PRE_CONFIGURED_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
 
 export const CACHE_TTL = 300000; // 5 minutes
 
