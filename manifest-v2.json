@@ -1,9 +1,9 @@
 {
   "short_name": "SafetyCheck",
   "name": "SafetyCheck Pro Inspection",
-  "id": "/juba-application-pros/",
-  "start_url": "/juba-application-pros/",
-  "scope": "/juba-application-pros/",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "./icons/icon-192.png",
@@ -24,21 +24,21 @@
   "background_color": "#ffffff",
   "orientation": "portrait",
   "note_taking": {
-    "new_note_url": "/juba-application-pros/"
+    "new_note_url": "/"
   },
   "shortcuts": [
     {
       "name": "General Inspection",
       "short_name": "General",
       "description": "Start a new General Vehicle Inspection",
-      "url": "/juba-application-pros/?action=general",
+      "url": "/?action=general",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Petroleum Inspection",
       "short_name": "Petroleum",
       "description": "Start a new Petroleum Inspection",
-      "url": "/juba-application-pros/?action=petroleum",
+      "url": "/?action=petroleum",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
