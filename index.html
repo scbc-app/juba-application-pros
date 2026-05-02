@@ -21,6 +21,9 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/juba-application-pros/manifest-v2.json" />
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/juba-application-pros/icons/icon-192.png" />
+    
     <title>SafetyCheck Pro</title>
     
     <!-- Tailwind CSS -->
@@ -93,15 +96,18 @@
   <body>
     <div id="root"></div>
     
-    <!-- PWA Install Button -->
+    <!-- PWA Install Button - Mobile Only -->
     <button id="install-btn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:9999; background:#2563eb; color:white; padding:12px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
       📱 Install App
     </button>
     
     <script>
-      // PWA Install Prompt Handler - Allows both URL bar icon AND custom button
+      // PWA Install Handler with Device Detection
       let deferredPrompt = null;
       let isAppInstalled = false;
+      
+      // Detect if user is on mobile device (shows custom button only on mobile)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       // Check if already installed
       if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -111,11 +117,11 @@
       
       // Listen for install prompt (Chrome, Edge, Samsung Internet)
       window.addEventListener('beforeinstallprompt', (e) => {
-        // Do NOT call e.preventDefault() - this allows URL bar icon to appear
+        // Do NOT call e.preventDefault() - this allows URL bar icon to appear on desktop
         deferredPrompt = e;
         
-        // Only show custom button if app is not installed
-        if (!isAppInstalled) {
+        // Show custom button ONLY on mobile devices AND app not installed
+        if (isMobile && !isAppInstalled) {
           const installBtn = document.getElementById('install-btn');
           if (installBtn) installBtn.style.display = 'block';
         }
@@ -130,7 +136,7 @@
         console.log('App installed successfully');
       });
       
-      // Custom Install Button Click Handler
+      // Custom Install Button Click Handler (mobile only)
       document.getElementById('install-btn')?.addEventListener('click', async () => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
