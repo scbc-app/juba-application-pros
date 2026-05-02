@@ -11,6 +11,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SafetyCheck" />
     
+    <!-- PWA Requirements for All Browsers -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/juba-application-pros/icons/icon-192.png">
+    <link rel="mask-icon" href="/juba-application-pros/icons/icon-192.png" color="#0f172a">
+    <meta name="msapplication-TileImage" content="/juba-application-pros/icons/icon-192.png">
+    <meta name="msapplication-TileColor" content="#0f172a">
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="/juba-application-pros/manifest-v2.json" />
     
@@ -85,5 +92,54 @@
 <script id="vite-plugin-pwa:register-sw" src="/juba-application-pros/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
+    
+    <!-- PWA Install Button -->
+    <button id="install-btn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:9999; background:#2563eb; color:white; padding:12px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+      📱 Install App
+    </button>
+    
+    <script>
+      // PWA Install Prompt Handler - Allows both URL bar icon AND custom button
+      let deferredPrompt = null;
+      let isAppInstalled = false;
+      
+      // Check if already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        isAppInstalled = true;
+        console.log('App is already installed');
+      }
+      
+      // Listen for install prompt (Chrome, Edge, Samsung Internet)
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Do NOT call e.preventDefault() - this allows URL bar icon to appear
+        deferredPrompt = e;
+        
+        // Only show custom button if app is not installed
+        if (!isAppInstalled) {
+          const installBtn = document.getElementById('install-btn');
+          if (installBtn) installBtn.style.display = 'block';
+        }
+      });
+      
+      // Handle app installed
+      window.addEventListener('appinstalled', () => {
+        isAppInstalled = true;
+        deferredPrompt = null;
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) installBtn.style.display = 'none';
+        console.log('App installed successfully');
+      });
+      
+      // Custom Install Button Click Handler
+      document.getElementById('install-btn')?.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          deferredPrompt = null;
+          document.getElementById('install-btn').style.display = 'none';
+        }
+      });
+    </script>
   </body>
 </html>
