@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/juba-application-pros/sw.js', { scope: '/juba-application-pros/' })})}
