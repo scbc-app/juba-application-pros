@@ -1,9 +1,12 @@
 {
   "short_name": "SafetyCheck",
   "name": "SafetyCheck Pro Inspection",
-  "id": "/",
-  "start_url": "/",
+  "description": "Professional Truck & Trailer Inspection System",
+  "id": "/?app=safetycheck",
+  "start_url": "/?utm_source=pwa",
   "scope": "/",
+  "lang": "en",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -22,7 +25,7 @@
   "display_override": ["standalone", "minimal-ui"],
   "theme_color": "#0f172a",
   "background_color": "#ffffff",
-  "orientation": "portrait",
+  "orientation": "any",
   "note_taking": {
     "new_note_url": "/"
   },
