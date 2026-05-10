@@ -95,5 +95,34 @@
 <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        if (!('serviceWorker' in navigator)) return;
+        if (document.readyState === 'complete') {
+          registerSW();
+        } else {
+          window.addEventListener('load', registerSW);
+        }
+        function registerSW() {
+          setTimeout(function() {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              var unregPromises = regs.map(function(r) {
+                if (r.scope.includes('juba-application-pros')) {
+                  return r.unregister();
+                }
+                return Promise.resolve();
+              });
+              return Promise.all(unregPromises);
+            }).then(function() {
+              return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            }).then(function(reg) {
+              console.log('SW registered:', reg.scope);
+            }).catch(function(err) {
+              console.warn('SW registration deferred:', err.message);
+            });
+          }, 1000);
+        }
+      })();
+    </script>
   </body>
 </html>
